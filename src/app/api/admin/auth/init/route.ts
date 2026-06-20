@@ -1,6 +1,7 @@
 import connectDB from '@/lib/mongodb'
 import WebAdmin from '@/models/WebAdmin'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -9,7 +10,8 @@ export async function POST(req: NextRequest) {
 
     // Check if this is being called with proper authorization
     const { initKey } = await req.json()
-    if (initKey !== 'initialize-admin-2024') {
+    const expectedKey = process.env.ADMIN_INIT_KEY || 'initialize-admin-2024'
+    if (initKey !== expectedKey) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -25,14 +27,22 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create default admin account
-    const hashedPassword = await bcrypt.hash('admin1', 12)
+    // Create default admin account securely
+    const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
+    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || crypto.randomBytes(12).toString('hex');
+
+    const hashedPassword = await bcrypt.hash(defaultPassword, 12)
     const admin = await WebAdmin.create({
-      username: 'admin1',
+      username: defaultUsername,
       password: hashedPassword,
       email: 'admin@mealnchill.com',
       role: 'web_admin'
     })
+
+    if (!process.env.DEFAULT_ADMIN_PASSWORD) {
+      console.warn(`\n[SECURITY WARNING] Default admin account created with generated password: ${defaultPassword}`);
+      console.warn('Please save this password securely and change it immediately!\n');
+    }
 
     return NextResponse.json(
       { 
