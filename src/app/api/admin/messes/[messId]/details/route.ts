@@ -169,7 +169,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ mess
     
     try {
       recentExpenses = await Expense.find({ messId: mess._id })
-        .populate('addedBy', 'name')
+        .populate('enteredByUserId', 'name')
         .sort({ createdAt: -1 })
         .limit(10)
         .lean()
@@ -288,18 +288,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ mess
       recentActivities: {
         expenses: recentExpenses.map((expense: any) => ({
           id: expense._id,
-          title: expense.title,
+          title: expense.itemName || 'Unknown Item',
           amount: expense.amount,
-          category: expense.category,
-          addedBy: expense.addedBy?.name || 'Unknown',
+          category: 'Food/Mess',
+          addedBy: expense.enteredByUserId ? (expense.enteredByUserId.name || 'Unknown') : 'Unknown',
           createdAt: expense.createdAt
         })),
         deposits: recentDeposits.map((deposit: any) => ({
           id: deposit._id,
           amount: deposit.amount,
           status: deposit.status,
-          method: deposit.method,
-          user: deposit.userId?.name || 'Unknown',
+          method: deposit.note || 'Deposit',
+          user: deposit.userId ? (deposit.userId.name || 'Unknown') : 'Unknown',
           createdAt: deposit.createdAt
         }))
       }

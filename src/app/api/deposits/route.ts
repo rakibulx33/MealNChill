@@ -75,8 +75,25 @@ export async function GET(request: NextRequest) {
       status: 'pending'
     })
 
+    const mappedDeposits = deposits.map((deposit: any) => {
+      const dObj = deposit.toObject ? deposit.toObject() : deposit;
+      
+      const userFallback = dObj.userId ? dObj.userId : { _id: 'deleted', name: 'Deleted User', email: '' };
+      
+      let approvedByFallback = dObj.approvedByUserId;
+      if (!approvedByFallback && deposit.approvedByUserId) {
+        approvedByFallback = { _id: 'deleted', name: 'Deleted User' };
+      }
+      
+      return {
+        ...dObj,
+        userId: userFallback,
+        approvedByUserId: approvedByFallback
+      };
+    });
+
     return NextResponse.json({
-      deposits,
+      deposits: mappedDeposits,
       totalApprovedDeposits: totalApprovedDeposits[0]?.total || 0,
       totalDepositedAmountCurrentCycle: mess?.totalDepositedAmountCurrentCycle || 0,
       pendingCount

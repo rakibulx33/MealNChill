@@ -132,6 +132,12 @@ export const syncAdminStatus = async (userId: string, messId: string, shouldBeAd
         })
       }
     } else {
+      // Check if this is the main admin BEFORE making any changes
+      if (mess.adminId && mess.adminId.toString() === userId) {
+        // This requires special handling - main admin transfer
+        throw new Error('Cannot remove main admin without transferring ownership')
+      }
+
       // Remove admin status - sync all fields
       await User.findByIdAndUpdate(userId, { 
         isAdmin: false,
@@ -142,12 +148,6 @@ export const syncAdminStatus = async (userId: string, messId: string, shouldBeAd
       await Mess.findByIdAndUpdate(messId, {
         $pull: { adminIds: userId }
       })
-
-      // If this was the main admin, need to handle that separately
-      if (mess.adminId && mess.adminId.toString() === userId) {
-        // This requires special handling - main admin transfer
-        throw new Error('Cannot remove main admin without transferring ownership')
-      }
     }
 
     return true

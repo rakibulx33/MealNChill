@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       // Notify the user about approval (use original messId since user was just removed)
       await Notification.create({
         messId: decoded.messId,
-        userId: requestingUser._id,
+        recipientId: requestingUser._id,
         type: 'leave_request_approved',
         title: 'Leave Request Approved',
         message: `Your leave request has been approved by ${currentUser.name}. You have been removed from the mess.${adminNote ? ` Admin note: ${adminNote}` : ''}`,
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       for (const admin of otherAdmins) {
         await Notification.create({
           messId: decoded.messId,
-          userId: admin._id,
+          recipientId: admin._id,
           type: 'member_left',
           title: 'Member Left Mess',
           message: `${requestingUser.name} has left the mess (leave request approved by ${currentUser.name}).`,
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
       // Notify the user about rejection
       await Notification.create({
         messId: decoded.messId,
-        userId: requestingUser._id,
+        recipientId: requestingUser._id,
         type: 'leave_request_rejected',
         title: 'Leave Request Rejected',
         message: `Your leave request has been rejected by ${currentUser.name}.${adminNote ? ` Reason: ${adminNote}` : ''}`,

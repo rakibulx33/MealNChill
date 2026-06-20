@@ -190,10 +190,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized - Admin access required' }, { status: 403 })
     }
 
-    const { description, amount, category, date, receipt } = await request.json()
+    const { description, itemName, amount, date } = await request.json()
+
+    // Support both 'description' and 'itemName' field names from different frontends
+    const expenseItemName = itemName || description
 
     // Validate required fields
-    if (!description || !amount || !category) {
+    if (!expenseItemName || !amount) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
     }
 
@@ -203,12 +206,10 @@ export async function POST(request: NextRequest) {
 
     const expense = new Expense({
       messId: decoded.messId,
-      description,
+      itemName: expenseItemName,
       amount: parseFloat(amount),
-      category,
       date: date ? new Date(date) : new Date(),
-      receipt: receipt || null,
-      addedBy: decoded.userId
+      enteredByUserId: decoded.userId
     })
 
     await expense.save()

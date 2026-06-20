@@ -8,6 +8,14 @@ import User from '@/models/User'
 import jwt from 'jsonwebtoken'
 import { NextRequest, NextResponse } from 'next/server'
 
+const getBangladeshDateString = (date: Date) => {
+  const bdTime = new Date(date.getTime() + 6 * 60 * 60 * 1000)
+  const y = bdTime.getUTCFullYear()
+  const m = String(bdTime.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(bdTime.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 export async function POST(req: NextRequest) {
   try {
     await connectDB()
@@ -72,6 +80,7 @@ export async function POST(req: NextRequest) {
     // Get deposit data
     const depositData = await Deposit.find({
       messId,
+      status: 'approved',
       date: { $gte: startDate, $lte: endDate }
     }).populate('userId', 'name email')
 
@@ -86,7 +95,7 @@ export async function POST(req: NextRequest) {
       extraMeals: number
       joinedAt: Date
     }> = {}
-    const activeMembers = mess.members.filter((member: any) => member.isActive)
+    const activeMembers = mess.members.filter((member: any) => member.isActive && member.userId)
 
     // Initialize member stats
     activeMembers.forEach((member: any) => {
@@ -109,25 +118,33 @@ export async function POST(req: NextRequest) {
 
     // Calculate meal counts from attendance data
     // We need to iterate through each day and each meal slot
-    const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
-    const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
+    const startDateStr = getBangladeshDateString(startDate)
+    const endDateStr = getBangladeshDateString(endDate)
     
-    // Get all unique dates between start and end
-    const allDates: Date[] = []
-    for (let d = new Date(startDateOnly); d <= endDateOnly; d.setDate(d.getDate() + 1)) {
-      allDates.push(new Date(d))
+    const [sY, sM, sD] = startDateStr.split('-').map(Number)
+    const [eY, eM, eD] = endDateStr.split('-').map(Number)
+    
+    const startUTC = new Date(Date.UTC(sY, sM - 1, sD))
+    const endUTC = new Date(Date.UTC(eY, eM - 1, eD))
+    
+    const allDateStrings: string[] = []
+    for (let d = new Date(startUTC); d <= endUTC; d.setUTCDate(d.getUTCDate() + 1)) {
+      const y = d.getUTCFullYear()
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(d.getUTCDate()).padStart(2, '0')
+      allDateStrings.push(`${y}-${m}-${day}`)
     }
 
     // For each member, for each day, for each meal slot, calculate the meal count
     activeMembers.forEach((member: any) => {
       const memberId = member.userId._id.toString()
       
-      allDates.forEach(date => {
+      allDateStrings.forEach(dateStr => {
         mealSlots.forEach(slot => {
           // Find attendance record for this member, date, and slot
           const attendance = mealAttendanceData.find((a: any) => 
-            a.userId._id.toString() === memberId && 
-            new Date(a.date).toDateString() === date.toDateString() &&
+            a.userId && a.userId._id.toString() === memberId && 
+            getBangladeshDateString(new Date(a.date)) === dateStr &&
             a.mealSlot === slot
           )
 
@@ -198,15 +215,14 @@ export async function POST(req: NextRequest) {
       },
       expenseBreakdown: expenseData.map((expense: any) => ({
         date: expense.date,
-        description: expense.description,
-        amount: expense.amount,
-        category: expense.category
+        itemName: expense.itemName,
+        amount: expense.amount
       })),
       depositBreakdown: depositData.map((deposit: any) => ({
         date: deposit.date,
         amount: deposit.amount,
-        memberName: deposit.userId.name,
-        description: deposit.description
+        memberName: deposit.userId ? deposit.userId.name : 'Deleted User',
+        note: deposit.note
       }))
     }
 

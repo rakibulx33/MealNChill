@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Create notification for the user
     const notification = new Notification({
       messId: decoded.messId,
-      userId: userId,
+      recipientId: userId,
       type: 'dues_reminder',
       title: 'Payment Due Reminder',
       message: `You have an outstanding payment of ৳${dueAmount.toFixed(2)} for billing cycle "${cycle.name}". Please settle your dues at the earliest.`,

@@ -1,6 +1,7 @@
 import connectDB from '@/lib/mongodb'
 import WebAdmin from '@/models/WebAdmin'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -22,14 +23,22 @@ export async function POST(req: NextRequest) {
     const adminCount = await WebAdmin.countDocuments()
     
     if (adminCount === 0) {
-      // Create default admin account
-      const hashedPassword = await bcrypt.hash('admin1', 12)
+      // Create default admin account securely
+      const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
+      const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || crypto.randomBytes(12).toString('hex');
+
+      const hashedPassword = await bcrypt.hash(defaultPassword, 12)
       await WebAdmin.create({
-        username: 'admin1',
+        username: defaultUsername,
         password: hashedPassword,
         email: 'admin@mealnchill.com',
         role: 'web_admin'
       })
+
+      if (!process.env.DEFAULT_ADMIN_PASSWORD) {
+        console.warn(`\n[SECURITY WARNING] Default admin account created with generated password: ${defaultPassword}`);
+        console.warn('Please save this password securely and change it immediately!\n');
+      }
     }
 
     // Find admin by username

@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       // Create notification
       await Notification.create({
         messId: decoded.messId,
-        userId: targetUserId,
+        recipientId: targetUserId,
         type: 'admin_promotion',
         title: 'Promoted to Admin',
         message: `You have been promoted to admin of ${mess.name}. You now have administrative privileges.`,
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       // Create notification
       await Notification.create({
         messId: decoded.messId,
-        userId: targetUserId,
+        recipientId: targetUserId,
         type: 'admin_demotion',
         title: 'Admin Rights Removed',
         message: `Your admin rights for ${mess.name} have been removed. You are now a regular member.`,

@@ -4,6 +4,14 @@ import User from '@/models/User'
 import jwt from 'jsonwebtoken'
 import { NextRequest, NextResponse } from 'next/server'
 
+const getBangladeshDateString = (date: Date) => {
+  const bdTime = new Date(date.getTime() + 6 * 60 * 60 * 1000)
+  const y = bdTime.getUTCFullYear()
+  const m = String(bdTime.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(bdTime.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 export async function GET(req: NextRequest) {
   try {
     await connectDB()
@@ -57,7 +65,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       routines: routines.map(routine => ({
         id: routine._id,
-        date: routine.date.toISOString().split('T')[0],
+        date: getBangladeshDateString(routine.date),
         mealSlot: routine.mealSlot,
         mealName: routine.mealName,
         mealDescription: routine.mealDescription || ''
@@ -152,7 +160,7 @@ export async function POST(req: NextRequest) {
       message: 'Meal routine saved successfully',
       routine: {
         id: mealRoutine._id,
-        date: mealRoutine.date.toISOString().split('T')[0],
+        date: getBangladeshDateString(mealRoutine.date),
         mealSlot: mealRoutine.mealSlot,
         mealName: mealRoutine.mealName,
         mealDescription: mealRoutine.mealDescription

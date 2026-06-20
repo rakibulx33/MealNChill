@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     for (const admin of admins) {
       await Notification.create({
         messId: currentUser.messId,
-        userId: admin._id,
+        recipientId: admin._id,
         type: 'leave_request',
         title: 'Leave Request Submitted',
         message: `${currentUser.name} has requested to leave the mess.${reason ? ` Reason: ${reason}` : ''}`,
@@ -267,7 +267,7 @@ async function transferAdminshipAndLeave(currentUser: any, mess: any, currentUse
     // Create notifications
     await Notification.create({
       messId: currentUser.messId,
-      userId: newAdminId,
+      recipientId: newAdminId,
       type: 'admin_promotion',
       title: 'Promoted to Admin',
       message: `You have been promoted to admin of ${mess.name} by ${currentUser.name} who has left the mess. You now have administrative privileges.`,
@@ -283,7 +283,7 @@ async function transferAdminshipAndLeave(currentUser: any, mess: any, currentUse
     for (const member of otherMembers) {
       await Notification.create({
         messId: currentUser.messId,
-        userId: member._id,
+        recipientId: member._id,
         type: 'admin_change',
         title: 'Admin Change',
         message: `${currentUser.name} has left the mess and transferred admin rights to ${newAdmin.name}.`,
@@ -358,7 +358,7 @@ async function processImmediateLeave(currentUser: any, mess: any, currentUserId:
     for (const admin of remainingAdmins) {
       await Notification.create({
         messId: currentUser.messId,
-        userId: admin._id,
+        recipientId: admin._id,
         type: 'member_left',
         title: 'Admin Left Mess',
         message: `${currentUser.name} (Admin) has left the mess.`,

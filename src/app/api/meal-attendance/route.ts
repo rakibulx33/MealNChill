@@ -7,6 +7,23 @@ import User from '@/models/User'
 import jwt from 'jsonwebtoken'
 import { NextRequest, NextResponse } from 'next/server'
 
+const parseBangladeshDate = (dateParam: string, timeOfDay: 'start' | 'end') => {
+  if (dateParam.includes('T')) {
+    return new Date(dateParam)
+  }
+  const time = timeOfDay === 'start' ? '00:00:00' : '23:59:59'
+  return new Date(`${dateParam}T${time}+06:00`)
+}
+
+const getBangladeshTodayString = () => {
+  const now = new Date()
+  const bdTime = new Date(now.getTime() + 6 * 60 * 60 * 1000)
+  const y = bdTime.getUTCFullYear()
+  const m = String(bdTime.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(bdTime.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 export async function GET(req: NextRequest) {
   try {
     await connectDB()
@@ -53,8 +70,8 @@ export async function GET(req: NextRequest) {
     if (startDateParam && endDateParam && fetchUserId) {
       try {
         // Parse the dates directly as they come from frontend (already in proper format)
-        const startDate = new Date(startDateParam)
-        const endDate = new Date(endDateParam)
+        const startDate = parseBangladeshDate(startDateParam, 'start')
+        const endDate = parseBangladeshDate(endDateParam, 'end')
         
         const attendance = await MealAttendance.find({
           messId: user.messId._id,
@@ -215,21 +232,26 @@ export async function GET(req: NextRequest) {
       dinner: '20:00'
     }
     
-    const currentTime = new Date()
-    const requestDate = new Date(dateParam)
-    const isToday = requestDate.toDateString() === new Date().toDateString()
+    const isToday = dateParam === getBangladeshTodayString()
+    
+    // Calculate current time in Bangladesh timezone
+    const now = new Date()
+    const bdTime = new Date(now.getTime() + 6 * 60 * 60 * 1000)
+    const currentBdHour = bdTime.getUTCHours()
+    const currentBdMinute = bdTime.getUTCMinutes()
+    const currentMinutesFromMidnight = currentBdHour * 60 + currentBdMinute
     
     const deadlineStatus = mealSlots.reduce((acc, slot) => {
       const deadlineTime = mealDeadlines[slot as keyof typeof mealDeadlines]
       if (deadlineTime && isToday) {
         const [hours, minutes] = deadlineTime.split(':').map(Number)
-        const deadlineDateTime = new Date()
-        deadlineDateTime.setHours(hours, minutes, 0, 0)
+        const deadlineMinutes = hours * 60 + minutes
+        const isPassed = currentMinutesFromMidnight > deadlineMinutes
         
         acc[slot] = {
           deadline: deadlineTime,
-          isPassed: currentTime > deadlineDateTime,
-          canModify: currentTime <= deadlineDateTime
+          isPassed,
+          canModify: !isPassed
         }
       } else {
         acc[slot] = {
@@ -390,12 +412,18 @@ export async function POST(req: NextRequest) {
       const deadlineTime = mealDeadlines[mealSlot as keyof typeof mealDeadlines]
       if (deadlineTime) {
         const [hours, minutes] = deadlineTime.split(':').map(Number)
-        const deadlineDateTime = new Date()
-        deadlineDateTime.setHours(hours, minutes, 0, 0)
         
         // Check if current time is past the deadline for today's meal
-        const isToday = requestDate.toDateString() === new Date().toDateString()
-        if (isToday && currentTime > deadlineDateTime) {
+        const isToday = date === getBangladeshTodayString()
+        
+        const now = new Date()
+        const bdTime = new Date(now.getTime() + 6 * 60 * 60 * 1000)
+        const currentBdHour = bdTime.getUTCHours()
+        const currentBdMinute = bdTime.getUTCMinutes()
+        const currentMinutesFromMidnight = currentBdHour * 60 + currentBdMinute
+        const deadlineMinutes = hours * 60 + minutes
+        
+        if (isToday && currentMinutesFromMidnight > deadlineMinutes) {
           return NextResponse.json(
             { 
               message: `Cannot modify ${mealSlot} attendance. Deadline (${deadlineTime}) has passed. Contact admin for changes.`,

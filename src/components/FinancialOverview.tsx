@@ -506,13 +506,13 @@ export default function FinancialOverview({ messId, isAdmin }: FinancialOverview
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Expense Ratio</span>
               <span className="font-semibold text-gray-900">
-                {((financialData.totalExpenses / financialData.totalDeposits) * 100).toFixed(1)}%
+                {financialData.totalDeposits > 0 ? ((financialData.totalExpenses / financialData.totalDeposits) * 100).toFixed(1) : '0.0'}%
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Savings Rate</span>
               <span className="font-semibold text-green-600">
-                {((financialData.currentBalance / financialData.totalDeposits) * 100).toFixed(1)}%
+                {financialData.totalDeposits > 0 ? ((financialData.currentBalance / financialData.totalDeposits) * 100).toFixed(1) : '0.0'}%
               </span>
             </div>
           </div>
@@ -525,13 +525,13 @@ export default function FinancialOverview({ messId, isAdmin }: FinancialOverview
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">Budget Utilization</span>
                 <span className="font-semibold text-gray-900">
-                  {((financialData.totalExpenses / financialData.totalDeposits) * 100).toFixed(1)}%
+                  {financialData.totalDeposits > 0 ? ((financialData.totalExpenses / financialData.totalDeposits) * 100).toFixed(1) : '0.0'}%
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-sky-500 h-2 rounded-full" 
-                  style={{ width: `${Math.min((financialData.totalExpenses / financialData.totalDeposits) * 100, 100)}%` }}
+                  style={{ width: `${financialData.totalDeposits > 0 ? Math.min((financialData.totalExpenses / financialData.totalDeposits) * 100, 100) : 0}%` }}
                 ></div>
               </div>
             </div>

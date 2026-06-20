@@ -293,12 +293,18 @@ export default function Home() {
   const fetchDashboardStats = async (messId: string, userId: string, token: string) => {
     setStatsLoading(true)
     try {
-      // Get current month's meal attendance
+      // Get current month's meal attendance in timezone-robust format
       const currentDate = new Date()
-      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+      const y = currentDate.getFullYear()
+      const m = currentDate.getMonth()
+      
+      const firstDay = new Date(y, m, 1)
+      const lastDay = new Date(y, m + 1, 0)
+      
+      const firstDayStr = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-01`
+      const lastDayStr = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`
 
-      const attendanceResponse = await fetch(`/api/meal-attendance?userId=${userId}&startDate=${firstDayOfMonth.toISOString()}&endDate=${lastDayOfMonth.toISOString()}`, {
+      const attendanceResponse = await fetch(`/api/meal-attendance?userId=${userId}&startDate=${firstDayStr}&endDate=${lastDayStr}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -320,7 +326,7 @@ export default function Home() {
         
         // Calculate total possible meals for the month (only count days up to today)
         const today = new Date()
-        const daysToCount = today > lastDayOfMonth ? lastDayOfMonth.getDate() : today.getDate()
+        const daysToCount = today > lastDay ? lastDay.getDate() : today.getDate()
         const mealFrequency = 2 // Default to 2 meals per day
         const totalPossibleMeals = daysToCount * mealFrequency
         

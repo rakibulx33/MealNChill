@@ -35,9 +35,20 @@ export async function GET(
     const settlements = await MemberSettlement.find({
       billingCycleId: cycleId,
       messId: decoded.messId
-    }).sort({ userName: 1 })
+    }).populate('userId', 'name email')
 
-    return NextResponse.json({ settlements })
+    const mappedSettlements = settlements.map((settlement: any) => {
+      const sObj = settlement.toObject ? settlement.toObject() : settlement;
+      return {
+        ...sObj,
+        userName: settlement.userId ? settlement.userId.name : 'Deleted User',
+        userEmail: settlement.userId ? settlement.userId.email : ''
+      }
+    })
+
+    mappedSettlements.sort((a: any, b: any) => a.userName.localeCompare(b.userName))
+
+    return NextResponse.json({ settlements: mappedSettlements })
   } catch (error) {
     console.error('Error fetching member settlements:', error)
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 })

@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     // Create notification for the user
     await Notification.create({
       messId: decoded.messId,
-      userId: currentUserId,
+      recipientId: currentUserId,
       type: 'admin_self_demotion',
       title: 'Admin Rights Removed',
       message: `You have successfully removed your admin rights for ${mess.name}. You are now a regular member.`,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     for (const admin of otherAdmins) {
       await Notification.create({
         messId: decoded.messId,
-        userId: admin._id,
+        recipientId: admin._id,
         type: 'admin_self_demotion',
         title: 'Admin Member Left',
         message: `${currentUser?.name} has removed their admin rights and is now a regular member.`,

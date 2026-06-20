@@ -107,6 +107,7 @@ export async function POST(
           $match: {
             messId: decoded.messId,
             userId: member._id,
+            status: 'approved',
             date: {
               $gte: cycle.startDate,
               $lte: cycle.endDate

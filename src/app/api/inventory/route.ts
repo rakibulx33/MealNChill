@@ -38,7 +38,6 @@ export async function GET(request: NextRequest) {
 
     // Get user's current mess membership status from database
     // This handles cases where JWT token is stale (created before mess approval)
-    const User = (await import('@/models/User')).default
     const user = await User.findById(decoded.userId)
     
     if (!user || !user.messId) {
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     // Check if item already exists
     let existingItem = await Inventory.findOne({
-      messId: decoded.messId,
+      messId: user.messId,
       itemName: { $regex: new RegExp(`^${itemName}$`, 'i') },
       unit: unit.toLowerCase()
     })
@@ -111,7 +110,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Create new item
       const inventoryItem = new Inventory({
-        messId: decoded.messId,
+        messId: user.messId,
         itemName,
         quantity: parseQuantity(quantity),
         unit: unit.toLowerCase(),
@@ -124,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     // Log the change
     await logInventoryChange({
-      messId: decoded.messId,
+      messId: user.messId.toString(),
       inventoryItemId: savedItem._id.toString(),
       itemName: savedItem.itemName,
       action,
@@ -177,7 +176,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
     }
 
-    const item = await Inventory.findOne({ _id: id, messId: decoded.messId })
+    const item = await Inventory.findOne({ _id: id, messId: user.messId })
 
     if (!item) {
       return NextResponse.json({ message: 'Inventory item not found' }, { status: 404 })
@@ -224,7 +223,7 @@ export async function PUT(request: NextRequest) {
 
     // Log the change
     await logInventoryChange({
-      messId: decoded.messId,
+      messId: user.messId.toString(),
       inventoryItemId: savedItem._id.toString(),
       itemName: savedItem.itemName,
       action: 'UPDATE',
@@ -278,7 +277,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ message: 'Item ID is required' }, { status: 400 })
     }
 
-    const item = await Inventory.findOne({ _id: itemId, messId: decoded.messId })
+    const item = await Inventory.findOne({ _id: itemId, messId: user.messId })
 
     if (!item) {
       return NextResponse.json({ message: 'Inventory item not found' }, { status: 404 })
@@ -286,7 +285,7 @@ export async function DELETE(request: NextRequest) {
 
     // Log the deletion before removing
     await logInventoryChange({
-      messId: decoded.messId,
+      messId: user.messId.toString(),
       inventoryItemId: item._id.toString(),
       itemName: item.itemName,
       action: 'REMOVE',
@@ -299,7 +298,7 @@ export async function DELETE(request: NextRequest) {
     })
 
     // Delete the item
-    await Inventory.deleteOne({ _id: itemId, messId: decoded.messId })
+    await Inventory.deleteOne({ _id: itemId, messId: user.messId })
 
     return NextResponse.json({
       message: 'Inventory item deleted successfully',

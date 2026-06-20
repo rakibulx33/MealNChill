@@ -16,6 +16,7 @@ interface BillingCycle {
 }
 
 interface MemberSettlement {
+  _id: string
   userId: string
   userName: string
   totalDepositsForCycle: number
@@ -403,7 +404,7 @@ export default function Billing({ messId, isAdmin }: BillingProps) {
                                 {settlement.status === 'unpaid' && settlement.finalBalance < 0 && (
                                   <>
                                     <button
-                                      onClick={() => handleUpdateSettlementStatus(settlement.userId, 'paid')}
+                                      onClick={() => handleUpdateSettlementStatus(settlement._id, 'paid')}
                                       disabled={isProcessing}
                                       className="block text-green-600 hover:text-green-900 disabled:text-gray-400"
                                     >
@@ -420,7 +421,7 @@ export default function Billing({ messId, isAdmin }: BillingProps) {
                                 )}
                                 {settlement.finalBalance >= 0 && settlement.status !== 'refunded' && (
                                   <button
-                                    onClick={() => handleUpdateSettlementStatus(settlement.userId, 'refunded')}
+                                    onClick={() => handleUpdateSettlementStatus(settlement._id, 'refunded')}
                                     disabled={isProcessing}
                                     className="block text-blue-600 hover:text-blue-900 disabled:text-gray-400"
                                   >

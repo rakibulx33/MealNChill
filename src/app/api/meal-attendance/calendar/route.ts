@@ -104,14 +104,14 @@ export async function GET(request: NextRequest) {
       const dateStr = record.date instanceof Date 
         ? record.date.toISOString().split('T')[0]
         : record.date
-      const userIdStr = record.userId._id.toString()
+      const userIdStr = record.userId ? record.userId._id.toString() : 'deleted'
       const key = `${dateStr}-${userIdStr}`
       
       if (!dataMap.has(key)) {
         dataMap.set(key, {
           date: dateStr,
           userId: userIdStr,
-          userName: userMap.get(userIdStr) || record.userId.name || 'Unknown User',
+          userName: userMap.get(userIdStr) || (record.userId ? record.userId.name : 'Deleted User'),
           breakfast: { status: false, extra: 0 },
           lunch: { status: false, extra: 0 },
           dinner: { status: false, extra: 0 },

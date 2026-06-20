@@ -223,8 +223,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       )
     }
 
-    // Check if user is admin
-    if (mess.adminId.toString() !== userId) {
+    // Check if user is admin (co-admins list or main admin)
+    const isAdmin = (Array.isArray(mess.adminIds) && mess.adminIds.some((id: any) => id.toString() === userId)) ||
+                    (mess.adminId && mess.adminId.toString() === userId)
+
+    if (!isAdmin) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }

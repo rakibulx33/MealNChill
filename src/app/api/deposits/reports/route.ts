@@ -229,10 +229,14 @@ export async function GET(request: NextRequest) {
         transactions: deposits.map(deposit => ({
           id: deposit._id,
           amount: deposit.amount,
-          user: {
+          user: deposit.userId ? {
             id: deposit.userId._id,
             name: deposit.userId.name,
             email: deposit.userId.email
+          } : {
+            id: 'deleted',
+            name: 'Deleted User',
+            email: ''
           },
           approvedBy: deposit.approvedByUserId ? {
             id: deposit.approvedByUserId._id,

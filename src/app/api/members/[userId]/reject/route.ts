@@ -81,7 +81,7 @@ export async function POST(
     // Send notification to the rejected user
     await Notification.create({
       messId: decoded.messId,
-      userId: userToReject._id,
+      recipientId: userToReject._id,
       type: 'general',
       title: 'Join Request Rejected',
       message: `Your request to join ${mess.name} has been rejected by ${currentUser.name}. You can try joining another mess or create your own.`,
@@ -98,7 +98,7 @@ export async function POST(
     for (const admin of otherAdmins) {
       await Notification.create({
         messId: decoded.messId,
-        userId: admin._id,
+        recipientId: admin._id,
         type: 'general',
         title: 'Member Rejected',
         message: `${userToReject.name}'s request to join the mess has been rejected by ${currentUser.name}.`,

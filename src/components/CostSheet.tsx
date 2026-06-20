@@ -60,7 +60,7 @@ export default function CostSheet({ messId, isAdmin }: CostSheetProps) {
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!expenseForm.itemName.trim() || !expenseForm.amount || parseFloat(expenseForm.amount) < 0) return
+    if (!expenseForm.itemName.trim() || !expenseForm.amount || parseFloat(expenseForm.amount) <= 0) return
 
     setIsProcessing(true)
     try {

@@ -80,7 +80,7 @@ export async function POST(
     // Send notification to the approved user
     await Notification.create({
       messId: decoded.messId,
-      userId: userToApprove._id,
+      recipientId: userToApprove._id,
       type: 'general',
       title: 'Join Request Approved',
       message: `Your request to join ${mess.name} has been approved by ${currentUser.name}. You can now access all mess features.`,
@@ -97,7 +97,7 @@ export async function POST(
     for (const admin of otherAdmins) {
       await Notification.create({
         messId: decoded.messId,
-        userId: admin._id,
+        recipientId: admin._id,
         type: 'general',
         title: 'Member Approved',
         message: `${userToApprove.name} has been approved to join the mess by ${currentUser.name}.`,

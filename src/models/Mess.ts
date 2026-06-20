@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import crypto from 'crypto'
 
 const messSchema = new mongoose.Schema({
   name: {
@@ -147,7 +148,7 @@ messSchema.pre('save', async function (next) {
 
     while (!isUnique) {
       // Generate a 6-character alphanumeric code
-      code = Math.random().toString(36).substring(2, 8).toUpperCase()
+      code = crypto.randomBytes(4).toString('hex').substring(0, 6).toUpperCase()
 
       // Check if this code already exists
       const existingMess = await (this.constructor as any).findOne({ messCode: code })
