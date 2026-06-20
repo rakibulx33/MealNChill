@@ -162,6 +162,9 @@ MONGODB_URI=mongodb://localhost:27017/mealnchill
 # JWT Secret Key (generate a secure random string)
 JWT_SECRET=your_super_secure_jwt_secret_key_here_minimum_32_characters
 
+# Admin Initialization Key (used to create the initial admin account)
+ADMIN_INIT_KEY=your_secure_admin_initialization_key
+
 # Environment
 NODE_ENV=development
 ```
@@ -296,6 +299,7 @@ vercel
 NODE_ENV=production
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/mealnchill
 JWT_SECRET=production-secure-secret-key-64-characters-minimum
+ADMIN_INIT_KEY=production-secure-admin-init-key
 ```
 
 ## 🤝 Contributing

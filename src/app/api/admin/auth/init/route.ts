@@ -10,8 +10,16 @@ export async function POST(req: NextRequest) {
 
     // Check if this is being called with proper authorization
     const { initKey } = await req.json()
-    const expectedKey = process.env.ADMIN_INIT_KEY || 'initialize-admin-2024'
-    if (initKey !== expectedKey) {
+    // Prevent initialization if the environment variable is not set
+    if (!process.env.ADMIN_INIT_KEY) {
+      console.error('CRITICAL: ADMIN_INIT_KEY environment variable is not set.')
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    if (initKey !== process.env.ADMIN_INIT_KEY) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
