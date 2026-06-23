@@ -45,11 +45,16 @@ export async function GET(request: NextRequest) {
 
     const formattedRequests = leaveRequests.map(request => ({
       id: request._id,
-      user: {
+      user: request.userId ? {
         id: request.userId._id,
         name: request.userId.name,
         email: request.userId.email,
         phone: request.userId.phone
+      } : {
+        id: 'deleted',
+        name: 'Deleted User',
+        email: 'N/A',
+        phone: 'N/A'
       },
       reason: request.reason,
       status: request.status,

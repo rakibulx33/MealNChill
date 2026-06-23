@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Add to mess adminIds if not already there
-      if (!mess.adminIds?.includes(targetUserId)) {
+      if (!mess.adminIds?.some((id: any) => id.toString() === targetUserId)) {
         await Mess.findByIdAndUpdate(decoded.messId, {
           $addToSet: { adminIds: targetUserId }
         })

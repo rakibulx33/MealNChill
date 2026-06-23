@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Remove current user from admin
-    await User.findByIdAndUpdate(currentUserId, { isAdmin: false })
+    await User.findByIdAndUpdate(currentUserId, { 
+      isAdmin: false,
+      role: 'member'
+    })
 
     // If using single admin field, need to assign it to another admin
     if (mess.adminId && mess.adminId.toString() === currentUserId) {

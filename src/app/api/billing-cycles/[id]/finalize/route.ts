@@ -6,6 +6,7 @@ import MealAttendance from '@/models/MealAttendance'
 import MemberSettlement from '@/models/MemberSettlement'
 import User from '@/models/User'
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
 import { NextRequest, NextResponse } from 'next/server'
 
 const verifyToken = async (token: string) => {
@@ -30,8 +31,13 @@ export async function POST(
     }
 
     const decoded = await verifyToken(token)
-    if (!decoded || !decoded.messId || !decoded.isAdmin) {
+    if (!decoded || !decoded.messId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 403 })
+    }
+
+    const currentUser = await User.findById(decoded.userId)
+    if (!currentUser || !currentUser.isAdmin) {
+      return NextResponse.json({ message: 'Unauthorized - Admin privileges required' }, { status: 403 })
     }
 
     const resolvedParams = await params
@@ -50,7 +56,7 @@ export async function POST(
     const totalExpenses = await Expense.aggregate([
       {
         $match: {
-          messId: decoded.messId,
+          messId: new mongoose.Types.ObjectId(decoded.messId),
           date: {
             $gte: cycle.startDate,
             $lte: cycle.endDate
@@ -71,7 +77,7 @@ export async function POST(
     const totalMeals = await MealAttendance.aggregate([
       {
         $match: {
-          messId: decoded.messId,
+          messId: new mongoose.Types.ObjectId(decoded.messId),
           date: {
             $gte: cycle.startDate,
             $lte: cycle.endDate
@@ -94,8 +100,8 @@ export async function POST(
       }
     ])
 
-    const finalTotalMealsPrepared = totalMeals[0]?.totalMeals || 1
-    const finalCostPerMeal = finalTotalExpenses / finalTotalMealsPrepared
+    const finalTotalMealsPrepared = totalMeals[0]?.totalMeals || 0
+    const finalCostPerMeal = finalTotalMealsPrepared > 0 ? (finalTotalExpenses / finalTotalMealsPrepared) : 0
 
     // Get all members and calculate their individual settlements
     const members = await User.find({ messId: decoded.messId })
@@ -105,7 +111,7 @@ export async function POST(
       const memberDeposits = await Deposit.aggregate([
         {
           $match: {
-            messId: decoded.messId,
+            messId: new mongoose.Types.ObjectId(decoded.messId),
             userId: member._id,
             status: 'approved',
             date: {
@@ -128,7 +134,7 @@ export async function POST(
       const memberMeals = await MealAttendance.aggregate([
         {
           $match: {
-            messId: decoded.messId,
+            messId: new mongoose.Types.ObjectId(decoded.messId),
             userId: member._id,
             date: {
               $gte: cycle.startDate,

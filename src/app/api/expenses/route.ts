@@ -5,6 +5,7 @@ import MealAttendance from '@/models/MealAttendance'
 import Mess from '@/models/Mess'
 import User from '@/models/User'
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
 import { NextRequest, NextResponse } from 'next/server'
 
 const verifyToken = async (token: string) => {
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     const category = url.searchParams.get('category')
 
     // Build filter
-    const filter: any = { messId: decoded.messId }
+    const filter: any = { messId: new mongoose.Types.ObjectId(decoded.messId) }
     
     if (startDate && endDate) {
       filter.date = {
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
       const totalMeals = await MealAttendance.aggregate([
         {
           $match: {
-            messId: decoded.messId,
+            messId: new mongoose.Types.ObjectId(decoded.messId),
             date: {
               $gte: new Date(startDate),
               $lte: new Date(endDate)
@@ -97,8 +98,8 @@ export async function GET(request: NextRequest) {
         }
       ])
 
-      const totalMealsCount = totalMeals[0]?.totalMeals || 1
-      costPerMeal = totalExpenses / totalMealsCount
+      const totalMealsCount = totalMeals[0]?.totalMeals || 0
+      costPerMeal = totalMealsCount > 0 ? (totalExpenses / totalMealsCount) : 0
     } else {
       // Calculate for current month if no date range specified
       const startOfMonth = new Date()
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
       const totalMealsCurrentMonth = await MealAttendance.aggregate([
         {
           $match: {
-            messId: decoded.messId,
+            messId: new mongoose.Types.ObjectId(decoded.messId),
             date: { $gte: startOfMonth, $lte: endOfMonth }
           }
         },
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
       const expensesCurrentMonth = await Expense.aggregate([
         {
           $match: {
-            messId: decoded.messId,
+            messId: new mongoose.Types.ObjectId(decoded.messId),
             date: { $gte: startOfMonth, $lte: endOfMonth }
           }
         },
@@ -148,9 +149,9 @@ export async function GET(request: NextRequest) {
         }
       ])
 
-      const totalMealsCount = totalMealsCurrentMonth[0]?.totalMeals || 1
+      const totalMealsCount = totalMealsCurrentMonth[0]?.totalMeals || 0
       const totalExpensesCurrentMonth = expensesCurrentMonth[0]?.total || 0
-      costPerMeal = totalExpensesCurrentMonth / totalMealsCount
+      costPerMeal = totalMealsCount > 0 ? (totalExpensesCurrentMonth / totalMealsCount) : 0
     }
 
     return NextResponse.json({

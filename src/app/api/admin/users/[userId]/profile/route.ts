@@ -4,6 +4,7 @@ import Expense from '@/models/Expense'
 import MealAttendance from '@/models/MealAttendance'
 import User from '@/models/User'
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
 
     // Get user's meal attendance statistics
     const mealStats = await MealAttendance.aggregate([
-      { $match: { userId: user._id } },
+      { $match: { userId: new mongoose.Types.ObjectId(user._id) } },
       {
         $group: {
           _id: {
@@ -111,8 +112,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     ])
 
     // Get user's expense contributions
-    const expenseStats = await Expense.aggregate([
-      { $match: { messId: user.messId } },
+    const expenseStats = user.messId ? await Expense.aggregate([
+      { $match: { messId: new mongoose.Types.ObjectId(user.messId._id) } },
       {
         $group: {
           _id: null,
@@ -120,11 +121,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
           expenseCount: { $sum: 1 }
         }
       }
-    ])
+    ]) : []
 
     // Get user's deposit history
     const depositStats = await Deposit.aggregate([
-      { $match: { userId: user._id } },
+      { $match: { userId: new mongoose.Types.ObjectId(user._id) } },
       {
         $group: {
           _id: null,
@@ -138,7 +139,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
 
     // Get recent activities
     const recentMeals = await MealAttendance.aggregate([
-      { $match: { userId: user._id } },
+      { $match: { userId: new mongoose.Types.ObjectId(user._id) } },
       { $sort: { date: -1 } },
       {
         $group: {

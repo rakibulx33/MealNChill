@@ -4,6 +4,7 @@ import MealAttendance from '@/models/MealAttendance'
 import Mess from '@/models/Mess'
 import User from '@/models/User'
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
 import { NextRequest, NextResponse } from 'next/server'
 
 const verifyToken = async (token: string) => {
@@ -175,8 +176,8 @@ export async function GET(request: NextRequest) {
           const totalMealsTaken = await MealAttendance.aggregate([
             {
               $match: {
-                messId: messId,
-                userId: user._id
+                messId: new mongoose.Types.ObjectId(messId),
+                userId: new mongoose.Types.ObjectId(user._id)
               }
             },
             {
@@ -199,8 +200,8 @@ export async function GET(request: NextRequest) {
           const totalMoneyPaid = await Deposit.aggregate([
             {
               $match: {
-                messId: messId,
-                userId: user._id,
+                messId: new mongoose.Types.ObjectId(messId),
+                userId: new mongoose.Types.ObjectId(user._id),
                 status: 'approved'
               }
             },
